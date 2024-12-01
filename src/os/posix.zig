@@ -66,7 +66,7 @@ pub fn print(
     self: *Self,
     current: usize,
     total: usize,
-    comptime fmt_str: []const u8,
+    comptime maybe_fmt_str: ?[]const u8,
     args: anytype,
 ) !void {
     self.buf.clearRetainingCapacity();
@@ -79,19 +79,31 @@ pub fn print(
     };
     const percent = @divTrunc(current * raw_progress_len, total);
 
-    try self.buf.writer().print(fmt_str, args);
-    self.print_line = @divTrunc(self.dw.strWidth(self.buf.items), self.length) +| 1;
+    if (maybe_fmt_str) |fmt_str| {
+        try self.buf.writer().print(fmt_str, args);
+        self.print_line = @divTrunc(self.dw.strWidth(self.buf.items), self.length) +| 1;
 
-    try writer.print(fmt_str, args);
-    try writer.writeByte('[');
-    for (0..raw_progress_len) |j| {
-        if (j <= percent) {
-            try writer.writeByte('=');
-        } else {
-            try writer.writeByte(' ');
+        try writer.print(fmt_str, args);
+        try writer.writeByte('[');
+        for (0..raw_progress_len) |j| {
+            if (j <= percent) {
+                try writer.writeByte('=');
+            } else {
+                try writer.writeByte(' ');
+            }
         }
+        try writer.print("] {}/{}\x1b[{}F", .{ current, total, self.print_line });
+    } else {
+        try writer.writeByte('[');
+        for (0..raw_progress_len) |j| {
+            if (j <= percent) {
+                try writer.writeByte('=');
+            } else {
+                try writer.writeByte(' ');
+            }
+        }
+        try writer.print("] {}/{}", .{ current, total });
     }
-    try writer.print("] {}/{}\x1b[{}F", .{ current, total, self.print_line });
     try self.stdout.flush();
 }
 
