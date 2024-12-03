@@ -102,7 +102,7 @@ pub fn print(
                 try writer.writeByte(' ');
             }
         }
-        try writer.print("] {}/{}", .{ current, total });
+        try writer.print("] {}/{}\r", .{ current, total });
     }
     try self.stdout.flush();
 }
