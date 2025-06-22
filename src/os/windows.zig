@@ -3,32 +3,25 @@ const win = @cImport({
     @cDefine("WIN32_LEAN_AND_MEAN", {});
     @cInclude("windows.h");
 });
+const log = std.log;
+const io = std.io;
+const ziglyph = @import("ziglyph");
 
 const Allocator = std.mem.Allocator;
 const ArrayList = std.ArrayList;
-const DisplayWidth = @import("zg_DisplayWidth");
 
-const log = std.log;
-const io = std.io;
 const log10Int = std.math.log10_int;
 
 win_stdout: win.HANDLE,
 stdout: @TypeOf(io.bufferedWriter(io.getStdOut().writer())),
 buf: ArrayList(u8),
-dw: DisplayWidth,
 length: usize,
 print_line: usize = 2,
 
 const Self = @This();
 
-threadlocal var dwd: DisplayWidth.DisplayWidthData = undefined;
-
 pub fn init(allocator: Allocator) !Self {
-    dwd = try DisplayWidth.DisplayWidthData.init(allocator);
-    errdefer dwd.deinit();
-
     var output: Self = undefined;
-    output.dw = DisplayWidth{ .data = &dwd };
 
     output.win_stdout = win.GetStdHandle(win.STD_OUTPUT_HANDLE);
     if (output.win_stdout == win.INVALID_HANDLE_VALUE) {
@@ -58,7 +51,6 @@ pub fn init(allocator: Allocator) !Self {
 
 pub fn deinit(self: *Self) void {
     self.buf.deinit();
-    dwd.deinit();
     var writer = self.stdout.writer();
     writer.writeAll("\x1b[?25h") catch @panic("stdout write failed");
     self.stdout.flush() catch @panic("stdout write failed");
@@ -92,7 +84,10 @@ pub fn print(
 
     if (maybe_fmt_str) |fmt_str| {
         try self.buf.writer().print(fmt_str, args);
-        self.print_line = @divTrunc(self.dw.strWidth(self.buf.items), self.length) +| 1;
+        self.print_line = @divTrunc(ziglyph.display_width.strWidth(
+            self.buf.items,
+            .half,
+        ), self.length) +| 1;
 
         try writer.print(fmt_str, args);
         try writer.writeByte('[');

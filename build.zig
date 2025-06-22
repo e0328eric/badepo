@@ -20,12 +20,15 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const zg_dep = b.dependency("zg", .{});
+    const ziglyph = b.dependency("ziglyph", .{
+        .target = target,
+        .optimize = optimize,
+    });
 
     const badepo_mod = b.addModule("badepo", .{
         .root_source_file = b.path("src/Badepo.zig"),
         .target = target,
         .optimize = optimize,
     });
-    badepo_mod.addImport("zg_DisplayWidth", zg_dep.module("DisplayWidth"));
+    badepo_mod.addImport("zg_DisplayWidth", ziglyph.module("ziglyph"));
 }
