@@ -30,7 +30,7 @@ pub fn build(b: *std.Build) void {
         .link_libc = true,
         .root_source_file = b.path("./src/os/czig.h"),
     });
-    const c_header_mod = b.addModule(.{
+    const c_header_mod = b.addModule("badepo_c", .{
         .root_source_file = c_header.getOutput(),
         .target = target,
         .optimize = optimize,
