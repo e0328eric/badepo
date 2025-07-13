@@ -1,6 +1,5 @@
 const builtin = @import("builtin");
 const std = @import("std");
-const ziglyph = @import("ziglyph");
 const c = switch (builtin.os.tag) {
     .linux, .macos => @import("c"),
     else => @compileError("This OS is not supported"),
@@ -8,11 +7,13 @@ const c = switch (builtin.os.tag) {
 
 const Allocator = std.mem.Allocator;
 const ArrayList = std.ArrayList;
+const DisplayWidth = @import("zg_DisplayWidth");
 
 const log = std.log;
 const io = std.io;
 const log10Int = std.math.log10_int;
 
+dw: DisplayWidth,
 stdout: @TypeOf(io.bufferedWriter(io.getStdOut().writer())),
 buf: ArrayList(u8),
 length: usize,
@@ -22,6 +23,9 @@ const Self = @This();
 
 pub fn init(allocator: Allocator) !Self {
     var output: Self = undefined;
+
+    output.dw = try DisplayWidth.init(allocator);
+    errdefer output.dw.deinit();
 
     const stdout = io.getStdOut();
 
@@ -49,6 +53,7 @@ pub fn deinit(self: *Self) void {
     var writer = self.stdout.writer();
     writer.writeAll("\x1b[?25h") catch @panic("stdout write failed");
     self.stdout.flush() catch @panic("stdout write failed");
+    self.dw.deinit();
 }
 
 pub fn print(
@@ -70,7 +75,7 @@ pub fn print(
 
     if (maybe_fmt_str) |fmt_str| {
         try self.buf.writer().print(fmt_str, args);
-        self.print_line = @divTrunc(ziglyph.display_width.strWidth(
+        self.print_line = @divTrunc(self.dw.strWidth(
             self.buf.items,
             .half,
         ), self.length) +| 1;

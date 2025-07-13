@@ -20,7 +20,7 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const ziglyph = b.dependency("ziglyph", .{
+    const zg = b.dependency("zg", .{
         .target = target,
         .optimize = optimize,
     });
@@ -36,13 +36,13 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    const badepo_mod = b.addModule("badepo", .{
+    _ = b.addModule("badepo", .{
         .root_source_file = b.path("src/Badepo.zig"),
         .target = target,
         .optimize = optimize,
         .imports = &.{
             .{ .name = "c", .module = c_header_mod },
+            .{ .name = "zg_DisplayWidth", .module = zg.module("DisplayWidth") },
         },
     });
-    badepo_mod.addImport("zg_DisplayWidth", ziglyph.module("ziglyph"));
 }

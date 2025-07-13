@@ -2,13 +2,14 @@ const std = @import("std");
 const win = @import("c");
 const log = std.log;
 const io = std.io;
-const ziglyph = @import("ziglyph");
 
 const Allocator = std.mem.Allocator;
 const ArrayList = std.ArrayList;
+const DisplayWidth = @import("zg_DisplayWidth");
 
 const log10Int = std.math.log10_int;
 
+dw: DisplayWidth,
 win_stdout: win.HANDLE,
 stdout: @TypeOf(io.bufferedWriter(io.getStdOut().writer())),
 buf: ArrayList(u8),
@@ -19,6 +20,9 @@ const Self = @This();
 
 pub fn init(allocator: Allocator) !Self {
     var output: Self = undefined;
+
+    output.dw = try DisplayWidth.init(allocator);
+    errdefer output.dw.deinit();
 
     output.win_stdout = win.GetStdHandle(win.STD_OUTPUT_HANDLE);
     if (output.win_stdout == win.INVALID_HANDLE_VALUE) {
@@ -51,6 +55,7 @@ pub fn deinit(self: *Self) void {
     var writer = self.stdout.writer();
     writer.writeAll("\x1b[?25h") catch @panic("stdout write failed");
     self.stdout.flush() catch @panic("stdout write failed");
+    self.dw.deinit();
 }
 
 pub fn print(
@@ -81,7 +86,7 @@ pub fn print(
 
     if (maybe_fmt_str) |fmt_str| {
         try self.buf.writer().print(fmt_str, args);
-        self.print_line = @divTrunc(ziglyph.display_width.strWidth(
+        self.print_line = @divTrunc(self.dw.strWidth(
             self.buf.items,
             .half,
         ), self.length) +| 1;
