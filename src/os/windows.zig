@@ -88,10 +88,7 @@ pub fn print(
 
     if (maybe_fmt_str) |fmt_str| {
         try self.buf.writer().print(fmt_str, args);
-        self.print_line = @divTrunc(self.dw.strWidth(
-            self.buf.items,
-            .half,
-        ), self.length) +| 1;
+        self.print_line = @divTrunc(self.dw.strWidth(self.buf.items), self.length) +| 1;
 
         try writer.print(fmt_str, args);
         try writer.writeByte('[');
