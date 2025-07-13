@@ -13,6 +13,7 @@ const log = std.log;
 const io = std.io;
 const log10Int = std.math.log10_int;
 
+allocator: Allocator,
 dw: DisplayWidth,
 stdout: @TypeOf(io.bufferedWriter(io.getStdOut().writer())),
 buf: ArrayList(u8),
@@ -24,8 +25,9 @@ const Self = @This();
 pub fn init(allocator: Allocator) !Self {
     var output: Self = undefined;
 
+    output.allocator = allocator;
     output.dw = try DisplayWidth.init(allocator);
-    errdefer output.dw.deinit();
+    errdefer output.dw.deinit(allocator);
 
     const stdout = io.getStdOut();
 
@@ -53,7 +55,7 @@ pub fn deinit(self: *Self) void {
     var writer = self.stdout.writer();
     writer.writeAll("\x1b[?25h") catch @panic("stdout write failed");
     self.stdout.flush() catch @panic("stdout write failed");
-    self.dw.deinit();
+    self.dw.deinit(self.allocator);
 }
 
 pub fn print(

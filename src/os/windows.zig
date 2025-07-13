@@ -9,6 +9,7 @@ const DisplayWidth = @import("zg_DisplayWidth");
 
 const log10Int = std.math.log10_int;
 
+allocator: Allocator,
 dw: DisplayWidth,
 win_stdout: win.HANDLE,
 stdout: @TypeOf(io.bufferedWriter(io.getStdOut().writer())),
@@ -21,8 +22,9 @@ const Self = @This();
 pub fn init(allocator: Allocator) !Self {
     var output: Self = undefined;
 
+    output.allocator = allocator;
     output.dw = try DisplayWidth.init(allocator);
-    errdefer output.dw.deinit();
+    errdefer output.dw.deinit(allocator);
 
     output.win_stdout = win.GetStdHandle(win.STD_OUTPUT_HANDLE);
     if (output.win_stdout == win.INVALID_HANDLE_VALUE) {
@@ -55,7 +57,7 @@ pub fn deinit(self: *Self) void {
     var writer = self.stdout.writer();
     writer.writeAll("\x1b[?25h") catch @panic("stdout write failed");
     self.stdout.flush() catch @panic("stdout write failed");
-    self.dw.deinit();
+    self.dw.deinit(self.allocator);
 }
 
 pub fn print(
