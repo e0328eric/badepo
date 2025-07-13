@@ -2,10 +2,7 @@ const builtin = @import("builtin");
 const std = @import("std");
 const ziglyph = @import("ziglyph");
 const c = switch (builtin.os.tag) {
-    .linux, .macos => @cImport({
-        @cInclude("sys/ioctl.h");
-        @cInclude("unistd.h");
-    }),
+    .linux, .macos => @import("c"),
     else => @compileError("This OS is not supported"),
 };
 

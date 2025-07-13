@@ -1,8 +1,5 @@
 const std = @import("std");
-const win = @cImport({
-    @cDefine("WIN32_LEAN_AND_MEAN", {});
-    @cInclude("windows.h");
-});
+const win = @import("c");
 const log = std.log;
 const io = std.io;
 const ziglyph = @import("ziglyph");

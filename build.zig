@@ -24,11 +24,25 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
+    const c_header = b.addTranslateC(.{
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+        .root_source_file = b.path("./src/os/czig.h"),
+    });
+    const c_header_mod = b.addModule(.{
+        .root_source_file = c_header.getOutput(),
+        .target = target,
+        .optimize = optimize,
+    });
 
     const badepo_mod = b.addModule("badepo", .{
         .root_source_file = b.path("src/Badepo.zig"),
         .target = target,
         .optimize = optimize,
+        .imports = &.{
+            .{ .name = "c", .module = c_header_mod },
+        },
     });
     badepo_mod.addImport("zg_DisplayWidth", ziglyph.module("ziglyph"));
 }
