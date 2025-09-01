@@ -1,7 +1,7 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
-const MIN_ZIG = std.SemanticVersion.parse("0.14.0-dev.2837+f38d7a92c") catch unreachable;
+const MIN_ZIG = std.SemanticVersion.parse("0.15.1") catch unreachable;
 //
 // NOTE: This code came from
 // https://github.com/zigtools/zls/blob/master/build.zig.
@@ -20,10 +20,6 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const zg = b.dependency("zg", .{
-        .target = target,
-        .optimize = optimize,
-    });
     const c_header = b.addTranslateC(.{
         .target = target,
         .optimize = optimize,
@@ -42,7 +38,6 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .imports = &.{
             .{ .name = "c", .module = c_header_mod },
-            .{ .name = "zg_DisplayWidth", .module = zg.module("DisplayWidth") },
         },
     });
 }

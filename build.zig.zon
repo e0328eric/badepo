@@ -1,14 +1,9 @@
 .{
     .name = .badepo,
     .fingerprint = 0x58c63daf1350686e,
-    .version = "0.1.0",
-    .minimum_zig_version = "0.13.0",
-    .dependencies = .{
-        .zg = .{
-            .url = "https://codeberg.org/atman/zg/archive/v0.14.1.tar.gz",
-            .hash = "zg-0.14.1-oGqU3IQ_tALZIiBN026_NTaPJqU-Upm8P_C7QED2Rzm8",
-        },
-    },
+    .version = "0.2.0",
+    .minimum_zig_version = "0.15.1",
+    .dependencies = .{},
     .paths = .{
         "build.zig",
         "build.zig.zon",
