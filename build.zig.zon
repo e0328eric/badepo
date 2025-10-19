@@ -1,7 +1,7 @@
 .{
     .name = .badepo,
     .fingerprint = 0x58c63daf1350686e,
-    .version = "0.2.0",
+    .version = "0.3.0",
     .minimum_zig_version = "0.15.1",
     .dependencies = .{},
     .paths = .{
