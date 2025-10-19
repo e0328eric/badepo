@@ -95,47 +95,6 @@ pub fn print(
     try writer.flush();
 }
 
-pub fn printExt(
-    self: *Self,
-    current: usize,
-    total: usize,
-    comptime format: []const u8,
-    args: anytype,
-) !void {
-    self.buf.clearRetainingCapacity();
-
-    var buf: [4096]u8 = undefined;
-    var buf_writer = self.stdout.writer(&buf);
-    const writer = &buf_writer.interface;
-
-    var console_info: win.CONSOLE_SCREEN_BUFFER_INFO = undefined;
-    if (win.GetConsoleScreenBufferInfo(self.win_stdout, &console_info) != win.TRUE) {
-        log.err("cannot get the console screen buffer info", .{});
-        return error.CannotGetConsoleScreenBufInfo;
-    }
-    const cursor_pos = console_info.dwCursorPosition;
-
-    _ = win.SetConsoleCursorPosition(self.win_stdout, .{ .X = 0, .Y = cursor_pos.Y });
-
-    const raw_progress_len = blk: {
-        const to_discard = 2 * log10Int(total) + 8;
-        break :blk self.length -| to_discard;
-    };
-    const percent = @divTrunc(current * raw_progress_len, total);
-
-    try writer.print(format, args);
-    try writer.writeByte('[');
-    for (0..raw_progress_len) |j| {
-        if (j <= percent) {
-            try writer.writeByte('=');
-        } else {
-            try writer.writeByte(' ');
-        }
-    }
-    try writer.print("] {}/{}", .{ current, total });
-    try writer.flush();
-}
-
 pub fn paddingNewline(self: *Self) !void {
     var buf: [4096]u8 = undefined;
     var writer = self.stdout.writer(&buf);
