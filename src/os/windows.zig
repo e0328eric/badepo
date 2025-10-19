@@ -107,8 +107,6 @@ pub fn printExt(
     var buf: [4096]u8 = undefined;
     var buf_writer = self.stdout.writer(&buf);
     const writer = &buf_writer.interface;
-    try writer.print(format, args);
-    try writer.flush();
 
     var console_info: win.CONSOLE_SCREEN_BUFFER_INFO = undefined;
     if (win.GetConsoleScreenBufferInfo(self.win_stdout, &console_info) != win.TRUE) {
@@ -125,6 +123,7 @@ pub fn printExt(
     };
     const percent = @divTrunc(current * raw_progress_len, total);
 
+    try writer.print(format, args);
     try writer.writeByte('[');
     for (0..raw_progress_len) |j| {
         if (j <= percent) {

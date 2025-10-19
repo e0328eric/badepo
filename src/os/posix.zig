@@ -94,8 +94,6 @@ pub fn printExt(
     var buf: [4096]u8 = undefined;
     var buf_writer = self.stdout.writer(&buf);
     const writer = &buf_writer.interface;
-    try writer.print(format, args);
-    try writer.flush();
 
     const raw_progress_len = blk: {
         const to_discard = 2 * log10Int(total) + 8;
@@ -103,6 +101,7 @@ pub fn printExt(
     };
     const percent = @divTrunc(current * raw_progress_len, total);
 
+    try writer.print(format, args);
     try writer.writeByte('[');
     for (0..raw_progress_len) |j| {
         if (j <= percent) {
