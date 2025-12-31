@@ -1,7 +1,11 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
-const MIN_ZIG = std.SemanticVersion.parse("0.15.1") catch unreachable;
+const BADEPO_VERSION_STR = @import("build.zig.zon").version;
+const BADEPO_VERSION = std.SemanticVersion.parse(BADEPO_VERSION_STR) catch unreachable;
+const MIN_ZIG_STRING = @import("build.zig.zon").minimum_zig_version;
+const MIN_ZIG = std.SemanticVersion.parse(MIN_ZIG_STRING) catch unreachable;
+const PROGRAM_NAME = @tagName(@import("build.zig.zon").name);
 //
 // NOTE: This code came from
 // https://github.com/zigtools/zls/blob/master/build.zig.
@@ -32,7 +36,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    _ = b.addModule("badepo", .{
+    _ = b.addModule(PROGRAM_NAME, .{
         .root_source_file = b.path("src/Badepo.zig"),
         .target = target,
         .optimize = optimize,

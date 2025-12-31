@@ -7,22 +7,24 @@ const c = switch (builtin.os.tag) {
 
 const Allocator = std.mem.Allocator;
 const ArrayList = std.ArrayList;
+const Io = std.Io;
 
 const log = std.log;
-const fs = std.fs;
 const log10Int = std.math.log10_int;
 
 allocator: Allocator,
-stdout: fs.File,
+io: Io,
+stdout: Io.File,
 buf: ArrayList(u8),
 length: usize,
 print_line: usize = 2,
 
 const Self = @This();
 
-pub fn init(allocator: Allocator) !Self {
+pub fn init(allocator: Allocator, io: Io) !Self {
     var output: Self = undefined;
     output.allocator = allocator;
+    output.io = io;
 
     var win_info: c.winsize = undefined;
     if (c.ioctl(std.posix.STDOUT_FILENO, c.TIOCGWINSZ, &win_info) < 0) {
@@ -30,14 +32,14 @@ pub fn init(allocator: Allocator) !Self {
         return error.TermSizeNotObtained;
     }
 
-    output.stdout = fs.File.stdout();
+    output.stdout = Io.File.stdout();
     output.length = @as(usize, @intCast(win_info.ws_col));
 
     output.buf = try ArrayList(u8).initCapacity(allocator, output.length * 2);
     errdefer output.buf.deinit(allocator);
 
     var buf: [1024]u8 = undefined;
-    var writer = output.stdout.writer(&buf);
+    var writer = output.stdout.writer(io, &buf);
     try writer.interface.writeAll("\x1b[?25l");
     try writer.interface.flush();
 
@@ -48,7 +50,7 @@ pub fn deinit(self: *Self) void {
     self.buf.deinit(self.allocator);
 
     var buf: [1024]u8 = undefined;
-    var writer = self.stdout.writer(&buf);
+    var writer = self.stdout.writer(self.io, &buf);
     writer.interface.writeAll("\x1b[?25h") catch @panic("stdout write failed");
     writer.interface.flush() catch @panic("stdout write failed");
 }
@@ -61,7 +63,7 @@ pub fn print(
     self.buf.clearRetainingCapacity();
 
     var buf: [4096]u8 = undefined;
-    var buf_writer = self.stdout.writer(&buf);
+    var buf_writer = self.stdout.writer(self.io, &buf);
     const writer = &buf_writer.interface;
 
     const raw_progress_len = blk: {
@@ -84,7 +86,7 @@ pub fn print(
 
 pub fn paddingNewline(self: *Self) !void {
     var buf: [4096]u8 = undefined;
-    var writer = self.stdout.writer(&buf);
+    var writer = self.stdout.writer(self.io, &buf);
     for (0..self.print_line + 1) |_| {
         try writer.interface.writeByte('\n');
     }
